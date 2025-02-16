@@ -37,10 +37,14 @@ document.addEventListener("DOMContentLoaded", () => {
 				angle -= 0.1
 				break;
 			case "w":
-				player.add(step)
+				if (!isAWall(Vector.add(player, step))) {
+					player.add(step)
+				}
 				break;
 			case "s":
-				player.sub(step)
+				if (!isAWall(Vector.sub(player, step))) {
+					player.sub(step)
+				}
 				break;
 		}
 		display()

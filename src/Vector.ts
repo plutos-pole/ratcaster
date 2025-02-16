@@ -14,6 +14,10 @@ export default class Vector {
 		return Math.sqrt(v.x * v.x + v.y * v.y)
 	}
 
+	static add(a: Vector, b: Vector): Vector {
+		return new Vector(a.x + b.x, a.y + b.y)
+	}
+
 	static sub(a: Vector, b: Vector): Vector {
 		return new Vector(a.x - b.x, a.y - b.y)
 	}
