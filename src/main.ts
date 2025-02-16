@@ -8,26 +8,74 @@ document.addEventListener("DOMContentLoaded", () => {
 	canvas.width  	= WIDTH
 	canvas.height 	= HEIGHT
 
-
-	const player = new Vector(WIDTH * 0.43, HEIGHT * 0.55)
+	// Initial position
+	const player 	= new Vector(WIDTH * 0.43, HEIGHT * 0.55)
+	let angle 		= 0
 
 
 	const display = () => {
 		if (ctx !== null) {
-			drawMiniMap(ctx, map)	
+			ctx.clearRect(0, 0, WIDTH, HEIGHT)
+
+			drawMiniMap(ctx, map, player, angle)
+			const distances = calculateDistance()	
 		}
 	}
 
 
 	display()
+
+
+	// Events
+	window.addEventListener("keydown", (e) => {
+		switch(e.key) {
+			case "d":
+				angle += 0.1
+				break;
+			case "a":
+				angle -= 0.1
+				break;
+			case "w":
+				player.add(new Vector(Math.cos(angle) * 3, Math.sin(angle) * 3))
+				break;
+			case "s":
+				player.sub(new Vector(Math.cos(angle) * 3, Math.sin(angle) * 3))
+				break;
+		}
+		display()
+	})
 })
 
-const drawMiniMap = (ctx: CanvasRenderingContext2D, map: number[][]) => {
+const calculateDistance = () => {
+
+}
+
+
+const drawMiniMap = (ctx: CanvasRenderingContext2D, map: number[][], player: Vector, angle: number) => {
 	ctx.scale(0.3, 0.3)
-	renderGrid();
+
+	renderGrid()
 	renderMap()
+	renderPlayer(player, angle)
+
 	ctx.setTransform(1, 0, 0, 1, 0, 0);
 
+
+	function renderPlayer(player: Vector, angle:number) {
+		const dir = new Vector(Math.cos(angle), Math.sin(angle))
+		dir.setMag(100)
+		ctx.save()
+		ctx.fillStyle = "red"
+		ctx.beginPath()
+		ctx.arc(player.x, player.y, 10, 0, Math.PI * 2)
+		ctx.fill();
+		ctx.beginPath()
+		ctx.lineWidth = 5
+		ctx.moveTo(player.x, player.y)
+		ctx.lineTo(player.x + dir.x, player.y + dir.y)
+		ctx.stroke()
+		ctx.restore()
+	}
 
 	function renderMap() {
 		for (let i = 0; i < N_ROWS; i++) {
