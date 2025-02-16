@@ -68,10 +68,18 @@ const drawScene = (ctx:CanvasRenderingContext2D, distances: number[]) => {
 			ctx.stroke()
 			ctx.restore()
 			ctx.save()
+			// FLOOR
 			ctx.beginPath()
 			ctx.strokeStyle = "black"
 			ctx.moveTo(i, yEnd)
 			ctx.lineTo(i, HEIGHT)
+			ctx.stroke()
+			ctx.restore()
+			// CEELING
+			ctx.beginPath()
+			ctx.strokeStyle = "rgb(135,206,250)"
+			ctx.moveTo(i, 0)
+			ctx.lineTo(i, yStart)
 			ctx.stroke()
 			ctx.restore()
 		}
@@ -158,7 +166,7 @@ const isAWall = (position: Vector) => {
 
 
 const drawMiniMap = (ctx: CanvasRenderingContext2D, map: number[][], player: Vector, angle: number) => {
-	ctx.scale(0.3, 0.3)
+	ctx.scale(0.2, 0.2)
 
 	renderGrid()
 	renderMap()
@@ -197,6 +205,9 @@ const drawMiniMap = (ctx: CanvasRenderingContext2D, map: number[][], player: Vec
 
 	function renderGrid() {
 		ctx.save()
+		ctx.fillStyle = "rgb(255,255,255)"
+		ctx.fillRect(0, 0, WIDTH, HEIGHT)
+		ctx.restore()
 		ctx.lineWidth = 1
 		ctx.beginPath()
 		for (let i = 0; i < N_ROWS; i++) {
