@@ -1,0 +1,17 @@
+{
+  "name": "raycast",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "build": "npx tsc",
+    "dev": "npx tsc --watch",
+    "server": "nodemon --exec http-server . -c-1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
