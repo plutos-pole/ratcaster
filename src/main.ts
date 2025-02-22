@@ -1,9 +1,11 @@
 import Vector from "./Vector.js";
+import Ray from "./Ray.js"
 import { WIDTH, HEIGHT, CELL_DIMENSION, FOV, map, N_ROWS, N_COLS } from "./utils.js";
 
 const inBounds = (p: Vector) => {
 	return (p.x >= 0 && p.x <= WIDTH-1 && p.y >= 0 && p.y <= HEIGHT-1)
 }
+const projectionPlaneDistance = ((WIDTH / 2) / Math.tan(FOV / 2))
 
 document.addEventListener("DOMContentLoaded", () => {
 	const canvas  	= document.getElementById("canvas") as HTMLCanvasElement
@@ -14,13 +16,14 @@ document.addEventListener("DOMContentLoaded", () => {
 	// Initial position
 	const player 	= new Vector(WIDTH * 0.43, HEIGHT * 0.55)
 	let angle 		= 0
+	
 
 
 	const display = () => {
 		if (ctx !== null) {
 			ctx.clearRect(0, 0, WIDTH, HEIGHT)
 			const distances = calculateDistance(player, angle)
-			drawScene(ctx, distances)	
+			drawScene(ctx, distances, angle)	
 			drawMiniMap(ctx, map, player, angle)
 		}
 	}
@@ -54,13 +57,14 @@ document.addEventListener("DOMContentLoaded", () => {
 	})
 })
 
-const drawScene = (ctx:CanvasRenderingContext2D, distances: number[]) => {
+const drawScene = (ctx:CanvasRenderingContext2D, distances: Ray[], playerAngle: number) => {
 	if (typeof distances !== "undefined") {
+		const MAX_DISTANCE = 550
 		for (let i = 0; i < distances.length; i++) {
-			const MAX_DISTANCE = 550
-			const SCALING = 50
-			const shadingFactor = 1 - (distances[i] / MAX_DISTANCE)
-			const wallHeight = (HEIGHT / distances[i]) * SCALING
+			const ray = distances[i]
+			const distance = ray.distance * Math.cos(playerAngle - ray.angle)
+			const shadingFactor = 1 - (distance / MAX_DISTANCE)
+			const wallHeight = (CELL_DIMENSION / distance) * projectionPlaneDistance
 			const yStart = (HEIGHT / 2) - wallHeight / 2
 			const yEnd = (HEIGHT / 2) + wallHeight / 2
 			ctx.save()
@@ -95,10 +99,11 @@ const calculateDistance = (player: Vector, angle: number) => {
 	const endAngle	 		= angle + (FOV / 2)
 	const angleIncrement	= FOV / WIDTH
 
-	const distances: number[] = []
+	const distances: Ray[] = []
 	for (let a = startAngle; a < endAngle; a += angleIncrement) {
 		const rayDirection	= new Vector(Math.cos(a), Math.sin(a))
-		distances.push(DDA(rayDirection, player, a))
+		const distance = DDA(rayDirection, player, a)
+		distances.push(new Ray(distance, a))
 	}
 
 
