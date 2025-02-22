@@ -1,10 +1,12 @@
 import Vector from "./Vector.js";
 import Ray from "./Ray.js"
-import { WIDTH, HEIGHT, CELL_DIMENSION, FOV, map, N_ROWS, N_COLS } from "./utils.js";
+import { WIDTH, HEIGHT, CELL_DIMENSION, FOV, map, N_ROWS, N_COLS, WallType } from "./utils.js";
 
 const inBounds = (p: Vector) => {
 	return (p.x >= 0 && p.x <= WIDTH-1 && p.y >= 0 && p.y <= HEIGHT-1)
 }
+
+
 const projectionPlaneDistance = ((WIDTH / 2) / Math.tan(FOV / 2))
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -67,9 +69,17 @@ const drawScene = (ctx:CanvasRenderingContext2D, distances: Ray[], playerAngle: 
 			const wallHeight = (CELL_DIMENSION / distance) * projectionPlaneDistance
 			const yStart = (HEIGHT / 2) - wallHeight / 2
 			const yEnd = (HEIGHT / 2) + wallHeight / 2
+			let color
 			ctx.save()
+			if (ray.wallType === WallType.Blue) {
+				color = `rgb(100,0,200)`
+			} else if (ray.wallType === WallType.Red) {
+				color = `rgb(200,0,100)`
+			} else {
+				color = `rgb(${255 * shadingFactor}, ${255 * shadingFactor}, ${255 * shadingFactor}`
+			}
+			ctx.strokeStyle = color
 			ctx.beginPath()
-			ctx.strokeStyle = `rgb(${255 * shadingFactor}, ${255 * shadingFactor}, ${255 * shadingFactor}`
 			ctx.moveTo(i, yStart)
 			ctx.lineTo(i, yEnd)
 			ctx.stroke()
@@ -102,8 +112,8 @@ const calculateDistance = (player: Vector, angle: number) => {
 	const distances: Ray[] = []
 	for (let a = startAngle; a < endAngle; a += angleIncrement) {
 		const rayDirection	= new Vector(Math.cos(a), Math.sin(a))
-		const distance = DDA(rayDirection, player, a)
-		distances.push(new Ray(distance, a))
+		const ray = DDA(rayDirection, player, a)
+		distances.push(ray)
 	}
 
 
@@ -141,7 +151,18 @@ const calculateDistance = (player: Vector, angle: number) => {
 		const vDistance = Math.hypot(vertWallPoint.x - player.x, vertWallPoint.y - player.y)
 
 
-		return hDistance < vDistance ? hDistance : vDistance
+		
+		
+		let wallType, minDistance;
+		if (hDistance < vDistance) {
+			wallType = isAWall(horizWallPoint)
+			minDistance = hDistance
+		} else {
+			wallType = isAWall(vertWallPoint)
+			minDistance = vDistance
+		}
+
+		return new Ray(minDistance, currAngle, wallType)
 	
 	}
 
@@ -171,7 +192,7 @@ const calculateDistance = (player: Vector, angle: number) => {
 const isAWall = (position: Vector) => {
 	const col = Math.floor(position.x / CELL_DIMENSION)
 	const row = Math.floor(position.y / CELL_DIMENSION)
-	return map[row][col] === 1
+	return map[row][col]
 }
 
 
@@ -206,7 +227,7 @@ const drawMiniMap = (ctx: CanvasRenderingContext2D, map: number[][], player: Vec
 			for (let j = 0; j < N_COLS; j++) {
 				const x = (j * CELL_DIMENSION) + 2
 				const y = (i * CELL_DIMENSION) + 2
-				if (map[i][j] === 1) {
+				if (map[i][j] !== 0) {
 					ctx.fillRect(x, y, CELL_DIMENSION - 4, CELL_DIMENSION - 4)
 				}
 			}
