@@ -17,7 +17,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	// Initial position
 	const player 	= new Vector(WIDTH * 0.43, HEIGHT * 0.55)
+	let horizon = HEIGHT / 2
 	let angle 		= 0
+	let lookOfset 	= new Vector(0, 0)
 	
 
 
@@ -25,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		if (ctx !== null) {
 			ctx.clearRect(0, 0, WIDTH, HEIGHT)
 			const distances = calculateDistance(player, angle)
-			drawScene(ctx, distances, angle)	
+			drawScene(ctx, distances, angle, lookOfset)	
 			drawMiniMap(ctx, map, player, angle)
 		}
 	}
@@ -48,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				if (!isAWall(Vector.add(player, step))) {
 					player.add(step)
 				}
-				break;
+				break
 			case "s":
 				if (!isAWall(Vector.sub(player, step))) {
 					player.sub(step)
@@ -57,10 +59,18 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 		display()
 	})
+	canvas.addEventListener("mousemove", (event) => {
+		let y = event.offsetY
+		const curentYa = y - horizon
+		lookOfset.sub(new Vector(0, curentYa))
+		horizon += curentYa
+		display()
+	})
 })
 
-const drawScene = (ctx:CanvasRenderingContext2D, distances: Ray[], playerAngle: number) => {
+const drawScene = (ctx:CanvasRenderingContext2D, distances: Ray[], playerAngle: number, lookOfset: Vector) => {
 	if (typeof distances !== "undefined") {
+
 		const MAX_DISTANCE = 550
 		for (let i = 0; i < distances.length; i++) {
 			const ray = distances[i]
@@ -71,8 +81,8 @@ const drawScene = (ctx:CanvasRenderingContext2D, distances: Ray[], playerAngle: 
 				scaleFactor = 3
 			}
 			const wallHeight = ((CELL_DIMENSION / distance) * projectionPlaneDistance)
-			const yStart = (HEIGHT / 2) - (wallHeight * scaleFactor)  / 2
-			const yEnd = (HEIGHT / 2) + wallHeight / 2
+			const yStart = ((HEIGHT / 2) - (wallHeight * scaleFactor)  / 2) + lookOfset.y
+			const yEnd = ((HEIGHT / 2) + wallHeight / 2) + lookOfset.y
 			let color
 			ctx.save()
 			switch(ray.wallType) {
@@ -130,7 +140,6 @@ const calculateDistance = (player: Vector, angle: number) => {
 	return distances
 
 	function DDA(rayDirection: Vector, startPosition: Vector, currAngle: number) {
-		debugger
 		let offX = (startPosition.x % CELL_DIMENSION) || CELL_DIMENSION
 		let offY = (startPosition.y % CELL_DIMENSION) || CELL_DIMENSION
 		

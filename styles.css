@@ -8,4 +8,5 @@ body {
 
 canvas {
 	justify-content: center;
+	cursor: none;
 }
