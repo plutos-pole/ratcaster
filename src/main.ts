@@ -64,11 +64,14 @@ const drawScene = (ctx:CanvasRenderingContext2D, distances: Ray[], playerAngle: 
 		const MAX_DISTANCE = 550
 		for (let i = 0; i < distances.length; i++) {
 			const ray = distances[i]
+			let scaleFactor = 1
 			const distance = ray.distance * Math.cos(playerAngle - ray.angle)
 			const shadingFactor = 1 - (distance / MAX_DISTANCE)
-
+			if (ray.wallType === WallType.Tower) {
+				scaleFactor = 3
+			}
 			const wallHeight = ((CELL_DIMENSION / distance) * projectionPlaneDistance)
-			const yStart = (HEIGHT / 2) - wallHeight  / 2
+			const yStart = (HEIGHT / 2) - (wallHeight * scaleFactor)  / 2
 			const yEnd = (HEIGHT / 2) + wallHeight / 2
 			let color
 			ctx.save()
