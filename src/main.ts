@@ -66,17 +66,23 @@ const drawScene = (ctx:CanvasRenderingContext2D, distances: Ray[], playerAngle: 
 			const ray = distances[i]
 			const distance = ray.distance * Math.cos(playerAngle - ray.angle)
 			const shadingFactor = 1 - (distance / MAX_DISTANCE)
-			const wallHeight = (CELL_DIMENSION / distance) * projectionPlaneDistance
-			const yStart = (HEIGHT / 2) - wallHeight / 2
+
+			const wallHeight = ((CELL_DIMENSION / distance) * projectionPlaneDistance)
+			const yStart = (HEIGHT / 2) - wallHeight  / 2
 			const yEnd = (HEIGHT / 2) + wallHeight / 2
 			let color
 			ctx.save()
-			if (ray.wallType === WallType.Blue) {
-				color = `rgb(100,0,200)`
-			} else if (ray.wallType === WallType.Red) {
-				color = `rgb(200,0,100)`
-			} else {
-				color = `rgb(${255 * shadingFactor}, ${255 * shadingFactor}, ${255 * shadingFactor}`
+			switch(ray.wallType) {
+				case WallType.Blue:
+					color = `rgb(100,0,200)`
+					break;
+				case WallType.Red:
+					color = `rgb(200,0,100)`
+					break;
+				case WallType.Green:
+					color = `rgb(0,200,150)`
+				default:
+					color = `rgb(${255 * shadingFactor}, ${255 * shadingFactor}, ${255 * shadingFactor}`
 			}
 			ctx.strokeStyle = color
 			ctx.beginPath()
@@ -93,6 +99,7 @@ const drawScene = (ctx:CanvasRenderingContext2D, distances: Ray[], playerAngle: 
 			ctx.stroke()
 			ctx.restore()
 			// CEELING
+			ctx.save()
 			ctx.beginPath()
 			ctx.strokeStyle = "rgb(135,206,250)"
 			ctx.moveTo(i, 0)
@@ -120,7 +127,7 @@ const calculateDistance = (player: Vector, angle: number) => {
 	return distances
 
 	function DDA(rayDirection: Vector, startPosition: Vector, currAngle: number) {
-
+		debugger
 		let offX = (startPosition.x % CELL_DIMENSION) || CELL_DIMENSION
 		let offY = (startPosition.y % CELL_DIMENSION) || CELL_DIMENSION
 		
@@ -155,10 +162,10 @@ const calculateDistance = (player: Vector, angle: number) => {
 		
 		let wallType, minDistance;
 		if (hDistance < vDistance) {
-			wallType = isAWall(horizWallPoint)
+			wallType = isAWall(Vector.add(horizWallPoint, rayDirection))
 			minDistance = hDistance
 		} else {
-			wallType = isAWall(vertWallPoint)
+			wallType = isAWall(Vector.add(vertWallPoint, rayDirection))
 			minDistance = vDistance
 		}
 
