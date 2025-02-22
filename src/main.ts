@@ -1,6 +1,9 @@
 import Vector from "./Vector.js";
 import { WIDTH, HEIGHT, CELL_DIMENSION, FOV, map, N_ROWS, N_COLS } from "./utils.js";
 
+const inBounds = (p: Vector) => {
+	return (p.x >= 0 && p.x <= WIDTH-1 && p.y >= 0 && p.y <= HEIGHT-1)
+}
 
 document.addEventListener("DOMContentLoaded", () => {
 	const canvas  	= document.getElementById("canvas") as HTMLCanvasElement
@@ -94,67 +97,69 @@ const calculateDistance = (player: Vector, angle: number) => {
 
 	const distances: number[] = []
 	for (let a = startAngle; a < endAngle; a += angleIncrement) {
-		const startPosition = new Vector(player.x, player.y)
 		const rayDirection	= new Vector(Math.cos(a), Math.sin(a))
-		distances.push(DDA(rayDirection, startPosition, a))
+		distances.push(DDA(rayDirection, player, a))
 	}
+
 
 	return distances
 
 	function DDA(rayDirection: Vector, startPosition: Vector, currAngle: number) {
-		let iterations	 	= 0 
-		let hit 			= 0
-		let maxDistance		= 0
 
-		// We can adjust iterations or even remove it
-		// if our map always has walls on it's boundaries so the ray will always hit something
-		while (!hit && iterations < 100) {
-
- 
-			let offX = (startPosition.x % CELL_DIMENSION) || CELL_DIMENSION
-			let offY = (startPosition.y % CELL_DIMENSION) || CELL_DIMENSION
-			
-			if (rayDirection.x > 0 && offX !== CELL_DIMENSION) {
-				offX = CELL_DIMENSION - offX
-			}
-	
-			if (rayDirection.y > 0 && offY !== CELL_DIMENSION) {
-				offY = CELL_DIMENSION - offY
-			}
-
-			// We know the distance from the cell boundary. So we need to calculate
-			// the hypotenuse if we cover that distance on x-axis or on y-axis
-			
-			// find the lenght of the Y side when we step offX length
-			const dY = Math.tan(currAngle) * offX
-			// so we can calculate hypotenus
-			const hX = Math.hypot(offX, dY)
-
-			// same for X side when we step offY length
-			const dX = offY / Math.tan(currAngle)
-			const hY = Math.hypot(offY, dX)
-
-			const step = new Vector(rayDirection.x, rayDirection.y)
-			if (hX < hY) {
-				step.mul(new Vector(hX, hX))
-				maxDistance += hX
-			} else {
-				step.mul(new Vector(hY, hY))
-				maxDistance += hY
-			}
-			startPosition.add(step)
-
-			// Find the corresponding row/col to our map array
-			const newPosition = new Vector(startPosition.x + rayDirection.x, startPosition.y + rayDirection.y)
-
-			if (isAWall(newPosition)) {
-				hit = 1
-				return maxDistance
-			}
-			
-			iterations++
+		let offX = (startPosition.x % CELL_DIMENSION) || CELL_DIMENSION
+		let offY = (startPosition.y % CELL_DIMENSION) || CELL_DIMENSION
+		
+		if (rayDirection.x > 0 && offX !== CELL_DIMENSION) {
+			offX = CELL_DIMENSION - offX
 		}
-		return maxDistance
+		if (rayDirection.x < 0) {
+			offX *= -1
+		}
+
+		if (rayDirection.y > 0 && offY !== CELL_DIMENSION) {
+			offY = CELL_DIMENSION - offY
+		}
+		if (rayDirection.y < 0) {
+			offY *= -1
+		}
+		
+		const yIntersect = new Vector(player.x + (offY / Math.tan(currAngle)), player.y + offY)
+		const yIntersectStep = new Vector(CELL_DIMENSION / Math.tan(currAngle), CELL_DIMENSION)
+
+		const xIntersect = new Vector(player.x + offX, player.y + (Math.tan(currAngle) * offX))
+		const xIntersectStep = new Vector(CELL_DIMENSION, Math.tan(currAngle) * CELL_DIMENSION)
+
+		const horizWallPoint = getEndPosition(yIntersect, rayDirection, yIntersectStep)
+		const vertWallPoint = getEndPosition(xIntersect, rayDirection, xIntersectStep)
+
+		const hDistance = Math.hypot(horizWallPoint.x - player.x, horizWallPoint.y - player.y)
+		const vDistance = Math.hypot(vertWallPoint.x - player.x, vertWallPoint.y - player.y)
+
+
+		return hDistance < vDistance ? hDistance : vDistance
+	
+	}
+
+	function getEndPosition(startPosition: Vector, rayDirection: Vector, step: Vector) {
+		let hit = 0
+		if ((rayDirection.x < 0 && step.x > 0) || (rayDirection.x > 0 && step.x < 0)) {
+			step.x *= -1
+		}
+		if ((rayDirection.y < 0 && step.y > 0) || (rayDirection.y > 0 && step.y < 0)) {
+			step.y *= -1
+		}
+
+		while (!hit) {
+			const potentialHit = Vector.add(startPosition, rayDirection)
+			if (!inBounds(potentialHit)) break;
+			if (isAWall(potentialHit)) {
+				hit = 1
+				return startPosition;
+			}
+
+			startPosition.add(step)
+		}
+		return new Vector(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)
 	}
 }
 
@@ -166,7 +171,7 @@ const isAWall = (position: Vector) => {
 
 
 const drawMiniMap = (ctx: CanvasRenderingContext2D, map: number[][], player: Vector, angle: number) => {
-	ctx.scale(0.2, 0.2)
+	ctx.scale(0.1, 0.1)
 
 	renderGrid()
 	renderMap()
