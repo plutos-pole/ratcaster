@@ -1,6 +1,6 @@
 # Ratcaster
 
-Bare-bones implementation of raycasting, aka "Wolfenstein 3D". It uses the DDA algorithm to calculate the optimal "step" for every ray instead of relying on an infinitely small step size. I didn’t fix the “fisheye” effect, though.
+Bare-bones implementation of raycasting, aka "Wolfenstein 3D". It uses the DDA algorithm to calculate the optimal "step" for every ray instead of relying on an infinitely small step size.
 
 
 
